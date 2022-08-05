@@ -7,16 +7,21 @@
 
 import UIKit
 
+protocol OnboardingContainerViewControllerDelegate: AnyObject {
+    func didFinishOnboarding()
+}
+
 class OnboardingContainerViewController: UIViewController {
 
     let pageViewController: UIPageViewController
+    let closeBtn = UIButton(type: .system)
+
     var pages = [UIViewController]()
     // 현재 보여지는 VC가 어떤 것인지를 알려줌
-    var currentVC: UIViewController {
-        didSet {
-        }
-    }
-    
+    var currentVC: UIViewController
+
+    weak var delegate: OnboardingContainerViewControllerDelegate?
+
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         self.pageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
         
@@ -40,6 +45,12 @@ class OnboardingContainerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setup()
+        style()
+        layout()
+    }
+    
+    private func setup() {
         view.backgroundColor = .systemPurple
         
         // 부모VC에 자식VC를 추가하는 방법(아래 세 줄)
@@ -60,6 +71,21 @@ class OnboardingContainerViewController: UIViewController {
         
         pageViewController.setViewControllers([pages.first!], direction: .forward, animated: false, completion: nil)
         currentVC = pages.first!
+    }
+    
+    private func style() {
+        closeBtn.translatesAutoresizingMaskIntoConstraints = false
+        closeBtn.setTitle("Close", for: [])
+        closeBtn.addTarget(self, action: #selector(closeTapped), for: .primaryActionTriggered)
+    }
+    
+    private func layout() {
+        view.addSubview(closeBtn)
+        
+        NSLayoutConstraint.activate([
+            closeBtn.leadingAnchor.constraint(equalToSystemSpacingAfter: view.leadingAnchor, multiplier: 2),
+            closeBtn.topAnchor.constraint(equalToSystemSpacingBelow: view.safeAreaLayoutGuide.topAnchor, multiplier: 2)
+        ])
     }
 }
 
@@ -82,13 +108,13 @@ extension OnboardingContainerViewController: UIPageViewControllerDataSource {
      */
     private func getPreviousViewController(from viewController: UIViewController) -> UIViewController? {
         guard let index = pages.firstIndex(of: viewController), index - 1 >= 0 else { return nil }
-        currentVC = pages[index - 1]
+        self.currentVC = pages[index - 1]
         return pages[index - 1]
     }
 
     private func getNextViewController(from viewController: UIViewController) -> UIViewController? {
         guard let index = pages.firstIndex(of: viewController), index + 1 < pages.count else { return nil }
-        currentVC = pages[index + 1]
+        self.currentVC = pages[index + 1]
         return pages[index + 1]
     }
 
@@ -98,5 +124,27 @@ extension OnboardingContainerViewController: UIPageViewControllerDataSource {
 
     func presentationIndex(for pageViewController: UIPageViewController) -> Int {
         return pages.firstIndex(of: self.currentVC) ?? 0
+    }
+}
+
+
+// MARK: - Actions
+extension OnboardingContainerViewController {
+    @objc func nextTapped(_ sender: UIButton) {
+        guard let nextVC = getNextViewController(from: currentVC) else { return }
+        pageViewController.setViewControllers([nextVC], direction: .forward, animated: true, completion: nil)
+    }
+    
+    @objc func backTapped(_ sender: UIButton) {
+        guard let previousVC = getPreviousViewController(from: currentVC) else { return }
+        pageViewController.setViewControllers([previousVC], direction: .reverse, animated: true, completion: nil)
+    }
+    
+    @objc func closeTapped(_ sender: UIButton) {
+        delegate?.didFinishOnboarding()
+    }
+    
+    @objc func doneTapped(_ sender: UIButton) {
+        delegate?.didFinishOnboarding()
     }
 }

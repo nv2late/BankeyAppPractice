@@ -7,6 +7,15 @@
 
 import UIKit
 
+protocol LogoutDelegate: AnyObject {
+    func didLogout()
+}
+
+protocol LoginViewControllerDelegate: AnyObject {
+    //func didLogin(_ sender: LoginViewController) // pass data
+    func didLogin()
+}
+
 class LoginViewController: UIViewController {
     
     let titleLabel = UILabel()
@@ -15,6 +24,8 @@ class LoginViewController: UIViewController {
     let loginView = LoginView()
     let signInBtn = UIButton(type: .system)
     let errorMessageLabel = UILabel()
+    
+    weak var delegate: LoginViewControllerDelegate?
     
     var username: String? {
         return loginView.usernameTextField.text
@@ -28,6 +39,11 @@ class LoginViewController: UIViewController {
         super.viewDidLoad()
         style()
         layout()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        signInBtn.configuration?.showsActivityIndicator = false
     }
 
 
@@ -123,17 +139,18 @@ extension LoginViewController {
             return
         }
         
-        if username.isEmpty || password.isEmpty {
-            configView(withMessage: "Username / password cannot be blank!")
-            return
-        }
+//        if username.isEmpty || password.isEmpty {
+//            configView(withMessage: "Username / password cannot be blank!")
+//            return
+//        }
         
-        if username == "Kei" && password == "welcome" {
+        if username == "" && password == "" {
             signInBtn.configuration?.showsActivityIndicator = true
+            delegate?.didLogin()
         }
-        else {
-            configView(withMessage: "Incorrect username / password")
-        }
+//        else {
+//            configView(withMessage: "Incorrect username / password")
+//        }
     }
     
     private func configView(withMessage message: String) {
