@@ -7,10 +7,13 @@
 
 import UIKit
 
+let appColor: UIColor = .systemTeal
+
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    let mainViewController = MainViewController()
     
     let loginViewController = LoginViewController()
     let onboardingContainerViewController = OnboardingContainerViewController()
@@ -26,7 +29,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         onboardingContainerViewController.delegate = self
         dummyViewController.logoutDelegate = self
         
-        window?.rootViewController = loginViewController
+        window?.rootViewController = mainViewController
+        //앱을 구동했을 때, 가장 먼저 보일 화면을 인덱스 넘버로 지정할 수 있다
+        //mainViewController.selectedIndex = 1
         
         return true
     }
