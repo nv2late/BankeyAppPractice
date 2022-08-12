@@ -11,34 +11,33 @@ let appColor: UIColor = .systemTeal
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
+    
     var window: UIWindow?
-    let mainViewController = MainViewController()
-    
     let loginViewController = LoginViewController()
-    let onboardingContainerViewController = OnboardingContainerViewController()
-    let dummyViewController = DummyViewController()
-    
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+    let onboardingViewController = OnboardingContainerViewController()
+    let mainViewController = MainViewController()
+        
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.makeKeyAndVisible()
         window?.backgroundColor = .systemBackground
         
         loginViewController.delegate = self
-        onboardingContainerViewController.delegate = self
-        dummyViewController.logoutDelegate = self
+        onboardingViewController.delegate = self
         
-        window?.rootViewController = AccountSummaryViewController()
-        //앱을 구동했을 때, 가장 먼저 보일 화면을 인덱스 넘버로 지정할 수 있다
-        //mainViewController.selectedIndex = 1
-        
+        let vc = mainViewController
+        vc.setStatusBar()
+
+        UINavigationBar.appearance().isTranslucent = false
+        UINavigationBar.appearance().backgroundColor = appColor
+            
+        window?.rootViewController = vc
+            
         return true
     }
-
 }
 
-// MARK: - Extensions
 extension AppDelegate {
     func setRootViewController(_ vc: UIViewController, animated: Bool = true) {
         guard animated, let window = self.window else {
@@ -46,11 +45,11 @@ extension AppDelegate {
             self.window?.makeKeyAndVisible()
             return
         }
-        
+
         window.rootViewController = vc
         window.makeKeyAndVisible()
         UIView.transition(with: window,
-                          duration: 0.7,
+                          duration: 0.3,
                           options: .transitionCrossDissolve,
                           animations: nil,
                           completion: nil)
@@ -60,10 +59,9 @@ extension AppDelegate {
 extension AppDelegate: LoginViewControllerDelegate {
     func didLogin() {
         if LocalState.hasOnboarded {
-            setRootViewController(dummyViewController)
-        }
-        else {
-        setRootViewController(onboardingContainerViewController)
+            setRootViewController(mainViewController)
+        } else {
+            setRootViewController(onboardingViewController)
         }
     }
 }
@@ -71,7 +69,7 @@ extension AppDelegate: LoginViewControllerDelegate {
 extension AppDelegate: OnboardingContainerViewControllerDelegate {
     func didFinishOnboarding() {
         LocalState.hasOnboarded = true
-        setRootViewController(dummyViewController)
+        setRootViewController(mainViewController)
     }
 }
 
@@ -80,4 +78,3 @@ extension AppDelegate: LogoutDelegate {
         setRootViewController(loginViewController)
     }
 }
-
