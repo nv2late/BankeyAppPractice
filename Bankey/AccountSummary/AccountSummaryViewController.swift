@@ -33,6 +33,10 @@ extension AccountSummaryViewController {
         tableView.delegate = self
         tableView.dataSource = self
         
+        tableView.register(AccountSummaryCell.self, forCellReuseIdentifier: AccountSummaryCell.reuseID) // 방금 만든 셀이나 self의 인스턴스를 가져와서 재사용 식별자를 전달
+        tableView.rowHeight = AccountSummaryCell.rowHeight
+        tableView.tableFooterView = UIView()
+        
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         
@@ -57,8 +61,7 @@ extension AccountSummaryViewController {
 
 extension AccountSummaryViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell()
-        cell.textLabel?.text = games[indexPath.row]
+        let cell = tableView.dequeueReusableCell(withIdentifier: AccountSummaryCell.reuseID, for: indexPath) as! AccountSummaryCell
         return cell
     }
     
