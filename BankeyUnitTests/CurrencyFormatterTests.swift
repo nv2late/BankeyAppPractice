@@ -12,37 +12,31 @@ import XCTest
 
 class Test: XCTestCase {
     var formatter: CurrencyFormatter!
+    let customCurrency = "$"
+    let customLocale = "en_US"
     
     override func setUp() {
         super.setUp()
-        formatter = CurrencyFormatter()
+        formatter = CurrencyFormatter(withCustomLocale: customLocale, withCurrency: customCurrency)
     }
     
     func testShouldBeVisible() throws {
-        let result = formatter.breakIntoDollarsAndCents(929466.23)
-        XCTAssertEqual(result.0, "929,466")
-        XCTAssertEqual(result.1, "23")
+        let result = formatter.breakIntoDecimalAndFraction(929466.23)
+        let currencyWithDecimal = result.0
+        let fraction = result.1
+        
+        XCTAssertEqual(currencyWithDecimal, "929,466")
+        XCTAssertEqual(fraction, "23")
     }
     
     // Challange
-    func testDollarsFormatted() throws {
-        let result = formatter.dollarsFormatted(929466.23)
-        XCTAssertEqual(result, "$929,466.23")
+    func testCurrencyFormatted() throws {
+        let result = formatter.formatCurrency(929466.23)
+        XCTAssertEqual(result, "\(customCurrency)929,466.23")
     }
     
-    func testZeroDollarsFormatted() throws {
-        let result = formatter.dollarsFormatted(0.00)
-        XCTAssertEqual(result, "$0.00")
-    }
-    
-    func testDollarsFormattedWithCurrencySymbol() throws {
-        let locale = Locale.current
-        print("\(locale)")
-        let currenySymbol = locale.currencySymbol!
-        print("\(currenySymbol)")
-        
-        let result = formatter.dollarsFormatted(0.00)
-        print("\(result)")
-        //XCTAssertEqual(result, "\(currenySymbol)0.00")
+    func testZeroCurrencyFormatted() throws {
+        let result = formatter.formatCurrency(0)
+        XCTAssertEqual(result, "\(customCurrency)0.00")
     }
 }
