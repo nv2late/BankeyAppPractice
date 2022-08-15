@@ -10,33 +10,43 @@ import XCTest
 
 @testable import Bankey
 
-class Test: XCTestCase {
+class CurrencyFormatterTests: XCTestCase {
     var formatter: CurrencyFormatter!
-    let customCurrency = "$"
-    let customLocale = "en_US"
-    
+
     override func setUp() {
         super.setUp()
-        formatter = CurrencyFormatter(withCustomLocale: customLocale, withCurrency: customCurrency)
+        formatter = CurrencyFormatter()
     }
-    
-    func testShouldBeVisible() throws {
-        let result = formatter.breakIntoDecimalAndFraction(929466.23)
-        let currencyWithDecimal = result.0
-        let fraction = result.1
-        
-        XCTAssertEqual(currencyWithDecimal, "929,466")
-        XCTAssertEqual(fraction, "23")
+
+    func testBreakDollarsIntoCents() throws {
+        let result = formatter.breakIntoDollarsAndCents(929466.23)
+        XCTAssertEqual(result.0, "929,466")
+        XCTAssertEqual(result.1, "23")
     }
-    
-    // Challange
-    func testCurrencyFormatted() throws {
-        let result = formatter.formatCurrency(929466.23)
-        XCTAssertEqual(result, "\(customCurrency)929,466.23")
+
+    func testBreakZeroDollarsIntoCents() throws {
+        let result = formatter.breakIntoDollarsAndCents(0.00)
+        XCTAssertEqual(result.0, "0")
+        XCTAssertEqual(result.1, "00")
     }
-    
-    func testZeroCurrencyFormatted() throws {
-        let result = formatter.formatCurrency(0)
-        XCTAssertEqual(result, "\(customCurrency)0.00")
+
+    // Challenge: You write
+    func testDollarsFormatted() throws {
+        let result = formatter.dollarsFormatted(929466.23)
+        XCTAssertEqual(result, "$929,466.23")
+    }
+
+    func testZeroDollarsFormatted() throws {
+        let result = formatter.dollarsFormatted(0.00)
+        XCTAssertEqual(result, "$0.00")
+    }
+
+    func testDollarsFormattedWithCurrencySymbol() throws {
+        let locale = Locale.current
+        let currencySymbol = locale.currencySymbol!
+        print("\(currencySymbol)")
+
+        let result = formatter.dollarsFormatted(929466.23)
+        XCTAssertEqual(result, "\(currencySymbol)929,466.23")
     }
 }
