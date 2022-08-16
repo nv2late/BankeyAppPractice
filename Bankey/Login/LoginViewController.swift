@@ -156,23 +156,35 @@ extension LoginViewController {
             return
         }
         
-//        if username.isEmpty || password.isEmpty {
-//            configView(withMessage: "Username / password cannot be blank!")
-//            return
-//        }
+        if username.isEmpty || password.isEmpty {
+            configView(withMessage: "Username / password cannot be blank!")
+            return
+        }
         
-        if username == "" && password == "" {
+        if username == "lauriel" && password == "hi" {
             signInBtn.configuration?.showsActivityIndicator = true
             delegate?.didLogin()
         }
-//        else {
-//            configView(withMessage: "Incorrect username / password")
-//        }
+        else {
+            configView(withMessage: "Incorrect username / password")
+        }
     }
     
     private func configView(withMessage message: String) {
         errorMessageLabel.isHidden = false
         errorMessageLabel.text = message
+        shakeButton()
+    }
+    
+    private func shakeButton() {
+        let animation = CAKeyframeAnimation()
+        animation.keyPath = "position.x"
+        animation.values = [0, 10, -10, 10, 0]  // 0에서 시작, 오른쪽으로 10, 왼쪽으로 10, 오른쪽으로 10, 0으로 돌아감
+        animation.keyTimes = [0, 0.16, 0.5, 0.83, 1]
+        animation.duration = 0.4
+        
+        animation.isAdditive = true
+        signInBtn.layer.add(animation, forKey: "shake")
     }
 }
 
