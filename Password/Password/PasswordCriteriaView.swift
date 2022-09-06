@@ -8,7 +8,6 @@
 import UIKit
 
 class PasswordCriteriaView: UIView {
-    
     let stackView = UIStackView()
     let imageView = UIImageView()
     let label = UILabel()
@@ -21,18 +20,17 @@ class PasswordCriteriaView: UIView {
         didSet {
             if isCriteriaMet {
                 imageView.image = checkmarkImage
-            }
-            else {
+            } else {
                 imageView.image = xmarkImage
             }
         }
     }
-    
+
     func reset() {
         isCriteriaMet = false
         imageView.image = circleImage
     }
-    
+
     init(text: String) {
         super.init(frame: .zero)
         
@@ -41,7 +39,7 @@ class PasswordCriteriaView: UIView {
         style()
         layout()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -52,11 +50,12 @@ class PasswordCriteriaView: UIView {
 }
 
 extension PasswordCriteriaView {
+    
     func style() {
         translatesAutoresizingMaskIntoConstraints = false
+        //backgroundColor = .systemOrange
         
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.axis = .horizontal
         stackView.spacing = 8
         
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -72,20 +71,21 @@ extension PasswordCriteriaView {
         stackView.addArrangedSubview(label)
         
         addSubview(stackView)
-        
+
+        // Stack
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalTo: topAnchor),
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
             stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            stackView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            stackView.bottomAnchor.constraint(equalTo: bottomAnchor)
         ])
         
-        // imageView
+        // Image
         NSLayoutConstraint.activate([
             imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor)
         ])
-        
-        // chcr
+
+        // CHCR
         imageView.setContentHuggingPriority(UILayoutPriority.defaultHigh, for: .horizontal)
         label.setContentHuggingPriority(UILayoutPriority.defaultLow, for: .horizontal)
     }

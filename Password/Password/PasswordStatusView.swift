@@ -19,7 +19,7 @@ class PasswordStatusView: UIView {
     let specialCharacterCriteriaView = PasswordCriteriaView(text: "special character (e.g. !@#$%^)")
     
     // Used to determine if we reset criteria back to empty state(●)
-    private var shouldResetCriteria: Bool = true
+    var shouldResetCriteria: Bool = true
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -33,11 +33,12 @@ class PasswordStatusView: UIView {
     }
     
     override var intrinsicContentSize: CGSize {
-        return CGSize(width: 200, height: 160)
+        return CGSize(width: 200, height: 200)
     }
 }
 
 extension PasswordStatusView {
+    
     func style() {
         translatesAutoresizingMaskIntoConstraints = false
         backgroundColor = .tertiarySystemFill
@@ -45,7 +46,7 @@ extension PasswordStatusView {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .vertical
         stackView.spacing = 8
-        //stackView.distribution = .equalCentering
+        stackView.distribution = .equalCentering
         
         criteriaLabel.numberOfLines = 0
         criteriaLabel.lineBreakMode = .byWordWrapping
@@ -67,8 +68,8 @@ extension PasswordStatusView {
         stackView.addArrangedSubview(specialCharacterCriteriaView)
         
         addSubview(stackView)
-        
-        // Stack Layout
+
+        // Stack layout
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalToSystemSpacingBelow: topAnchor, multiplier: 2),
             stackView.leadingAnchor.constraint(equalToSystemSpacingAfter: leadingAnchor, multiplier: 2),
@@ -82,14 +83,14 @@ extension PasswordStatusView {
         plainTextAttributes[.font] = UIFont.preferredFont(forTextStyle: .subheadline)
         plainTextAttributes[.foregroundColor] = UIColor.secondaryLabel
         
-        var boldTextAttributes = [NSAttributedString.Key:AnyObject]()
+        var boldTextAttributes = [NSAttributedString.Key: AnyObject]()
         boldTextAttributes[.foregroundColor] = UIColor.label
         boldTextAttributes[.font] = UIFont.preferredFont(forTextStyle: .subheadline)
-        
+
         let attrText = NSMutableAttributedString(string: "Use at least ", attributes: plainTextAttributes)
         attrText.append(NSAttributedString(string: "3 of these 4 ", attributes: boldTextAttributes))
         attrText.append(NSAttributedString(string: "criteria when setting your password:", attributes: plainTextAttributes))
-        
+
         return attrText
     }
 }
@@ -101,29 +102,64 @@ extension PasswordStatusView {
         let uppercaseMet = PasswordCriteria.uppercaseMet(text)
         let lowercaseMet = PasswordCriteria.lowercaseMet(text)
         let digitMet = PasswordCriteria.digitMet(text)
-        let specialCharMet = PasswordCriteria.specialCharacterMet(text)
+        let specialCharacterMet = PasswordCriteria.specialCharacterMet(text)
         
         if shouldResetCriteria {
-            //inline validate (✅ or ⚪️)
+            // Inline validation (✅ or ⚪️)
             lengthAndNoSpaceMet
-            ? lengthCriteriaView.isCriteriaMet = true
-            : lengthCriteriaView.reset()
+                ? lengthCriteriaView.isCriteriaMet = true
+                : lengthCriteriaView.reset()
             
             uppercaseMet
-            ? uppercaseCriteriaView.isCriteriaMet = true
-            : uppercaseCriteriaView.reset()
+                ? uppercaseCriteriaView.isCriteriaMet = true
+                : uppercaseCriteriaView.reset()
             
             lowercaseMet
-            ? lowerCaseCriteriaView.isCriteriaMet = true
-            : lowerCaseCriteriaView.reset()
-            
+                ? lowerCaseCriteriaView.isCriteriaMet = true
+                : lowerCaseCriteriaView.reset()
+
             digitMet
-            ? digitCriteriaView.isCriteriaMet = true
-            : digitCriteriaView.reset()
+                ? digitCriteriaView.isCriteriaMet = true
+                : digitCriteriaView.reset()
             
-            specialCharMet
-            ? specialCharacterCriteriaView.isCriteriaMet = true
-            : specialCharacterCriteriaView.reset()
+            specialCharacterMet
+                ? specialCharacterCriteriaView.isCriteriaMet = true
+                : specialCharacterCriteriaView.reset()
         }
+        else {
+            // focus lost (✅ or ❌)
+            lengthCriteriaView.isCriteriaMet = lengthAndNoSpaceMet
+            uppercaseCriteriaView.isCriteriaMet = uppercaseMet
+            lowerCaseCriteriaView.isCriteriaMet = lowercaseMet
+            digitCriteriaView.isCriteriaMet = digitMet
+            specialCharacterCriteriaView.isCriteriaMet = specialCharacterMet
+        }
+        
+    }
+    
+    func validate(_ text: String) -> Bool {
+        let uppercaseMet = PasswordCriteria.uppercaseMet(text)
+        let lowercaseMet = PasswordCriteria.lowercaseMet(text)
+        let digitMet = PasswordCriteria.digitMet(text)
+        let specialCharMet = PasswordCriteria.specialCharacterMet(text)
+        
+        // 3개나 4개의 유효성을 확인하는 함수
+        let checkable = [uppercaseMet, lowercaseMet, digitMet, specialCharMet]
+        let metCriteria = checkable.filter { $0 }
+        let lengthAndNoSpaceMet = PasswordCriteria.lengthAndNoSpaceMet(text)
+        
+        if lengthAndNoSpaceMet && metCriteria.count >= 3 {
+            return true
+        }
+        
+        return false
+    }
+    
+    func reset() {
+        lengthCriteriaView.reset()
+        uppercaseCriteriaView.reset()
+        lowerCaseCriteriaView.reset()
+        digitCriteriaView.reset()
+        specialCharacterCriteriaView.reset()
     }
 }

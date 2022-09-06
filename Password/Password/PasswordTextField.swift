@@ -7,23 +7,42 @@
 
 import UIKit
 
+import UIKit
+
 protocol PasswordTextFieldDelegate: AnyObject {
     func editingChanged(_ sender: PasswordTextField)
+    func editingDidEnd(_ sender: PasswordTextField)
 }
 
 class PasswordTextField: UIView {
+
+    /**
+     A function one passes in to do custom validation on the text field.
+     
+     - Parameter: textValue: The value of text to validate
+     - Returns: A Bool indicating whether text is valid, and if not a String containing an error message
+     */
+    typealias CustomValidation = (_ textValue: String?) -> (Bool, String)?
     
     let lockImageView = UIImageView(image: UIImage(systemName: "lock.fill"))
     let textField = UITextField()
-    let placeHolderText: String
     let eyeButton = UIButton(type: .custom)
     let dividerView = UIView()
-    let errorLable = UILabel()
+    let errorLabel = UILabel()
     
+    let placeHolderText: String
+    var customValidation: CustomValidation?
     weak var delegate: PasswordTextFieldDelegate?
     
+    // 텍스트 필드로 이동 -> 텍스트를 선택 사항으로 반환하는 computed var
+    // 문자열을 사용하거나 새 값으로 텍스트 필드의 텍스트를 설정할 수 있다
+    var text: String? {
+        get { return textField.text }
+        set { textField.text = newValue }
+    }
+    
     init(placeHolderText: String) {
-        self.placeHolderText = placeHolderText  // Uninitialized properties need values before calling super
+        self.placeHolderText = placeHolderText
         
         super.init(frame: .zero)
         
@@ -36,7 +55,7 @@ class PasswordTextField: UIView {
     }
     
     override var intrinsicContentSize: CGSize {
-        return CGSize(width: 200, height: 50)
+        return CGSize(width: 200, height: 60)
     }
 }
 
@@ -44,21 +63,21 @@ extension PasswordTextField {
     
     func style() {
         translatesAutoresizingMaskIntoConstraints = false
-        backgroundColor = .white
         
         lockImageView.translatesAutoresizingMaskIntoConstraints = false
         
         textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.isSecureTextEntry = false
+        textField.isSecureTextEntry = false // true
         textField.placeholder = placeHolderText
-        textField.autocapitalizationType = .none
-        //textField.delegate = self
+        textField.delegate = self
         textField.keyboardType = .asciiCapable
-        textField.attributedPlaceholder = NSAttributedString(string: placeHolderText,
+        textField.autocapitalizationType = .none
+        textField.attributedPlaceholder = NSAttributedString(string:placeHolderText,
                                                              attributes: [NSAttributedString.Key.foregroundColor: UIColor.secondaryLabel])
+        
         // extra interaction
         textField.addTarget(self, action: #selector(textFieldEditingChanged), for: .editingChanged)
-        
+
         eyeButton.translatesAutoresizingMaskIntoConstraints = false
         eyeButton.setImage(UIImage(systemName: "eye.circle"), for: .normal)
         eyeButton.setImage(UIImage(systemName: "eye.slash.circle"), for: .selected)
@@ -67,17 +86,18 @@ extension PasswordTextField {
         dividerView.translatesAutoresizingMaskIntoConstraints = false
         dividerView.backgroundColor = .separator
         
-        errorLable.translatesAutoresizingMaskIntoConstraints = false
-        errorLable.textColor = .systemRed
-        errorLable.font = .preferredFont(forTextStyle: .footnote)
-        errorLable.text = "Your password must meet the requirements below."
+        errorLabel.translatesAutoresizingMaskIntoConstraints = false
+        errorLabel.textColor = .systemRed
+        errorLabel.font = .preferredFont(forTextStyle: .footnote)
+        errorLabel.text = "Your password must meet the requirements below"
         // width 사이즈에 맞게 폰트사이즈 조정
         //errorLable.adjustsFontSizeToFitWidth = true
         //errorLable.minimumScaleFactor = 0.8
         // 멀티라인
-        errorLable.numberOfLines = 0
-        errorLable.lineBreakMode = .byWordWrapping
-        errorLable.isHidden = true
+        errorLabel.numberOfLines = 0
+        errorLabel.lineBreakMode = .byWordWrapping
+
+        errorLabel.isHidden = true
     }
     
     func layout() {
@@ -85,31 +105,26 @@ extension PasswordTextField {
         addSubview(textField)
         addSubview(eyeButton)
         addSubview(dividerView)
-        addSubview(errorLable)
+        addSubview(errorLabel)
         
         // lock
         NSLayoutConstraint.activate([
             lockImageView.centerYAnchor.constraint(equalTo: textField.centerYAnchor),
-            lockImageView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            lockImageView.leadingAnchor.constraint(equalTo: leadingAnchor)
         ])
         
-        // textField
+        // textfield
         NSLayoutConstraint.activate([
             textField.topAnchor.constraint(equalTo: topAnchor),
             textField.leadingAnchor.constraint(equalToSystemSpacingAfter: lockImageView.trailingAnchor, multiplier: 1),
         ])
         
-        // eyeButton
+        // eye
         NSLayoutConstraint.activate([
             eyeButton.centerYAnchor.constraint(equalTo: textField.centerYAnchor),
             eyeButton.leadingAnchor.constraint(equalToSystemSpacingAfter: textField.trailingAnchor, multiplier: 1),
             eyeButton.trailingAnchor.constraint(equalTo: trailingAnchor)
         ])
-        
-        // CHCR
-        lockImageView.setContentHuggingPriority(UILayoutPriority.defaultHigh, for: .horizontal)
-        textField.setContentHuggingPriority(UILayoutPriority.defaultLow, for: .horizontal)
-        eyeButton.setContentHuggingPriority(UILayoutPriority.defaultHigh, for: .horizontal)
         
         // divider
         NSLayoutConstraint.activate([
@@ -119,12 +134,17 @@ extension PasswordTextField {
             dividerView.topAnchor.constraint(equalToSystemSpacingBelow: textField.bottomAnchor, multiplier: 1)
         ])
         
-        // errorLabel
+        // error
         NSLayoutConstraint.activate([
-            errorLable.topAnchor.constraint(equalTo: dividerView.bottomAnchor, constant: 4),
-            errorLable.leadingAnchor.constraint(equalTo: leadingAnchor),
-            errorLable.trailingAnchor.constraint(equalTo: trailingAnchor)
+            errorLabel.topAnchor.constraint(equalTo: dividerView.bottomAnchor, constant: 4),
+            errorLabel.leadingAnchor.constraint(equalTo: leadingAnchor),
+            errorLabel.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
+        
+        // CHCR
+        lockImageView.setContentHuggingPriority(UILayoutPriority.defaultHigh, for: .horizontal)
+        textField.setContentHuggingPriority(UILayoutPriority.defaultLow, for: .horizontal)
+        eyeButton.setContentHuggingPriority(UILayoutPriority.defaultHigh, for: .horizontal)
     }
 }
 
@@ -142,5 +162,37 @@ extension PasswordTextField {
 
 // MARK: - UITextFieldDelegate
 extension PasswordTextField: UITextFieldDelegate {
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        delegate?.editingDidEnd(self)
+    }
+
+    // Called when 'return' key pressed. Necessary for dismissing keyboard.
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.endEditing(true) // resign first responder
+        return true
+    }
+}
+
+// MARK: - Validation
+extension PasswordTextField {
+    func validate() -> Bool {
+        if let customValidation = customValidation,
+           let customValidationResult = customValidation(text),
+           customValidationResult.0 == false {
+            showError(customValidationResult.1)
+            return false
+        }
+        clearError()
+        return true
+    }
     
+    private func showError(_ errorMessage: String) {
+        errorLabel.isHidden = false
+        errorLabel.text = errorMessage
+    }
+    
+    private func clearError() {
+        errorLabel.isHidden = true
+        errorLabel.text = ""
+    }
 }
